@@ -31,9 +31,44 @@
       <div class="header-actions">
         <span class="currency-tag">USD ($)</span>
         <button type="button" class="btn-primary-nav" onclick="focusComposer()">Plan a Journey</button>
+        <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open navigation menu" aria-expanded="false" onclick="toggleMobileNav()">
+          <svg class="icon-menu" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          <svg class="icon-close hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
     </div>
   </header>
+
+  <!-- Mobile Slide-out Drawer Navigation -->
+  <div id="mobileDrawer" class="mobile-drawer" aria-hidden="true">
+    <div class="mobile-drawer-backdrop" onclick="toggleMobileNav(false)"></div>
+    <div class="mobile-drawer-panel">
+      <div class="drawer-header">
+        <div class="drawer-brand">
+          <span class="brand-title">TripMate</span>
+          <span class="brand-tag">Private Travel</span>
+        </div>
+        <button type="button" class="drawer-close-btn" aria-label="Close menu" onclick="toggleMobileNav(false)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <nav class="drawer-nav">
+        <a href="#plannerCard" class="drawer-link" onclick="toggleMobileNav(false)">Itineraries</a>
+        <a href="#exemplarsSection" class="drawer-link" onclick="toggleMobileNav(false)">Destinations</a>
+        <a href="#workflowSection" class="drawer-link" onclick="toggleMobileNav(false)">Concierge Matrix</a>
+        <a href="#resultSection" class="drawer-link" onclick="toggleMobileNav(false)">Dossier</a>
+      </nav>
+      <div class="drawer-footer">
+        <div class="drawer-currency-row">
+          <span class="currency-label">Pricing Base:</span>
+          <span class="currency-tag">USD ($)</span>
+        </div>
+        <button type="button" class="btn-submit-brief w-full" onclick="toggleMobileNav(false); focusComposer();">
+          Plan a Journey →
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Main Content Layout -->
   <main class="main-wrapper">
@@ -328,6 +363,20 @@
     <div id="errorBox" class="notice-banner hidden" role="alert"></div>
 
   </main>
+
+  <!-- Mobile Sticky Bottom Review Bar (Active during HITL confirmation) -->
+  <aside id="mobileStickyBar" class="mobile-sticky-action hidden" aria-label="Review actions">
+    <div class="sticky-action-inner">
+      <div class="sticky-caption">
+        <span class="sticky-title">Draft Under Review</span>
+        <span class="sticky-sub">Confirm or customize</span>
+      </div>
+      <div class="sticky-buttons">
+        <button type="button" class="btn-sticky-confirm" onclick="submitApproval(true)">Confirm</button>
+        <button type="button" class="btn-sticky-jump" onclick="scrollToApproval()">Adjust</button>
+      </div>
+    </div>
+  </aside>
 
   <!-- Site Footer -->
   <footer class="site-footer">

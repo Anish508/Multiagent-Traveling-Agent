@@ -1,7 +1,7 @@
 /**
  * TripMate - Bespoke Travel Intelligence Client
- * Editorial & Production-Grade UX
- * Zero Emojis, Clean SVG Iconography, Timeline Parser, Interactive Day Selector
+ * Luxury Editorial UX & Fully Responsive Mobile/Tablet/Desktop Behavior
+ * Zero Emojis, Clean SVG Iconography, Timeline Parser, Touch-Friendly Navigation
  */
 
 let currentThreadId = localStorage.getItem("travel_thread_id") || null;
@@ -9,7 +9,7 @@ let latestAnswerMarkdown = "";
 let waitingForApproval = false;
 let parsedDaysCount = 5;
 
-// Clean, professional specialist labels (NO EMOJIS)
+// Clean specialist labels (Zero emojis)
 const SPECIALIST_LABELS = {
   flight_agent: "Aviation & Route Intelligence",
   hotel_agent: "Hospitality & Curated Stays",
@@ -63,7 +63,59 @@ const DESTINATION_IMAGES = {
 };
 
 /**
- * Switch editorial destination hero photography based on destination text
+ * Mobile Navigation Drawer Toggle
+ */
+function toggleMobileNav(forceState) {
+  const drawer = document.getElementById("mobileDrawer");
+  const menuBtn = document.getElementById("mobileMenuBtn");
+  if (!drawer) return;
+
+  const isOpen = drawer.classList.contains("open");
+  const shouldOpen = typeof forceState === "boolean" ? forceState : !isOpen;
+
+  if (shouldOpen) {
+    drawer.classList.add("open");
+    drawer.setAttribute("aria-hidden", "false");
+    if (menuBtn) menuBtn.setAttribute("aria-expanded", "true");
+    document.body.style.overflow = "hidden";
+  } else {
+    drawer.classList.remove("open");
+    drawer.setAttribute("aria-hidden", "true");
+    if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
+    document.body.style.overflow = "";
+  }
+}
+
+/**
+ * Focus composer and scroll into view smoothly
+ */
+function focusComposer() {
+  const destInput = document.getElementById("fieldDest");
+  const composer = document.getElementById("plannerCard");
+  if (composer) {
+    composer.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  if (destInput) {
+    setTimeout(() => { destInput.focus(); }, 300);
+  }
+}
+
+/**
+ * Scroll to approval / refinement desk
+ */
+function scrollToApproval() {
+  const section = document.getElementById("approvalSection");
+  if (section) {
+    section.scrollIntoView({ behavior: "smooth", block: "center" });
+    const feedbackInput = document.getElementById("approvalFeedback");
+    if (feedbackInput) {
+      setTimeout(() => { feedbackInput.focus(); }, 300);
+    }
+  }
+}
+
+/**
+ * Switch editorial destination photography based on destination text
  */
 function updateDestinationHero(destinationText) {
   const img = document.getElementById("destinationHeroImg");
@@ -169,11 +221,25 @@ function hideError() {
 }
 
 /**
- * Render standard Markdown to target element
+ * Render standard Markdown to target element with mobile responsive table handling
  */
 function renderMarkdown(element, markdown) {
   if (typeof marked !== "undefined") {
     element.innerHTML = marked.parse(markdown || "");
+    
+    // Automatically wrap all tables in responsive containers with swipe hint
+    element.querySelectorAll("table").forEach((table) => {
+      if (!table.parentElement.classList.contains("table-responsive-wrapper")) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "table-responsive-wrapper";
+        const hint = document.createElement("div");
+        hint.className = "table-swipe-hint";
+        hint.textContent = "Swipe horizontally to view full table details";
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(hint);
+        wrapper.appendChild(table);
+      }
+    });
   } else {
     element.innerText = markdown || "";
   }
@@ -199,7 +265,6 @@ function renderTimelineFromMarkdown(markdown) {
   const matches = [...markdown.matchAll(dayRegex)];
 
   if (!matches || matches.length === 0) {
-    // If no explicit Day headings found, leave timeline clean and let full markdown display
     timelineContainer.classList.add("hidden");
     return;
   }
@@ -215,7 +280,6 @@ function renderTimelineFromMarkdown(markdown) {
     const endIndex = (i + 1 < matches.length) ? matches[i + 1].index : markdown.length;
     const dayContent = markdown.slice(startIndex, endIndex).trim();
 
-    // Extract activities (lines starting with - or * or numbers or time stamps)
     const lines = dayContent.split("\n");
     const activities = [];
     let currentActivity = null;
@@ -224,12 +288,10 @@ function renderTimelineFromMarkdown(markdown) {
       const trimmed = line.trim();
       if (!trimmed) continue;
 
-      // Stop if hitting a non-activity major section like Flight / Hotel tables
       if (trimmed.startsWith("### Flight") || trimmed.startsWith("### Hotel") || trimmed.startsWith("### Budget") || trimmed.startsWith("## Final")) {
         break;
       }
 
-      // Check if line looks like an activity item (e.g. "- **09:00 AM** Activity", "- Morning: Activity", "1. Activity")
       const timeMatch = trimmed.match(/^[-*•]?\s*(?:\*\*)?(\d{1,2}:\d{2}(?:\s*[AP]M)?|Morning|Afternoon|Evening|Night|Midday)(?:\*\*)?[:\s\-–—]*(.*)/i);
       
       if (timeMatch) {
@@ -237,7 +299,6 @@ function renderTimelineFromMarkdown(markdown) {
         const timeBadge = timeMatch[1].trim();
         const activityBody = timeMatch[2].trim().replace(/^\*\*|\*\*$/g, "");
         
-        // Check for location or description separation
         let title = activityBody;
         let desc = "";
         let loc = "";
@@ -257,7 +318,7 @@ function renderTimelineFromMarkdown(markdown) {
           title: title.replace(/[*_#]/g, "").trim(),
           location: loc,
           description: desc.replace(/[*_]/g, "").trim(),
-          meta: "Curated activity"
+          meta: "Curated experience"
         };
       } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
         if (currentActivity) activities.push(currentActivity);
@@ -267,17 +328,15 @@ function renderTimelineFromMarkdown(markdown) {
           title: cleanText.length > 50 ? cleanText.slice(0, 48) + "..." : cleanText,
           location: "",
           description: cleanText.length > 50 ? cleanText : "",
-          meta: "Recommended experience"
+          meta: "Recommended activity"
         };
       } else if (currentActivity && !trimmed.startsWith("#")) {
-        // Append continuation text to description
         currentActivity.description += (currentActivity.description ? " " : "") + trimmed.replace(/[*_]/g, "");
       }
     }
 
     if (currentActivity) activities.push(currentActivity);
 
-    // If no granular bullet points found, provide an editorial summary card
     if (activities.length === 0) {
       activities.push({
         time: "All Day",
@@ -324,8 +383,8 @@ function renderTimelineFromMarkdown(markdown) {
     d.activities.forEach((act) => {
       timelineHtml += `
         <div class="timeline-item">
-          <div class="timeline-time">${act.time}</div>
           <div class="timeline-dot"></div>
+          <div class="timeline-time">${act.time}</div>
           <div class="timeline-content">
             <div class="activity-title">${act.title}</div>
             ${act.location ? `<div class="activity-location">${act.location}</div>` : ""}
@@ -346,7 +405,7 @@ function renderTimelineFromMarkdown(markdown) {
 }
 
 /**
- * Filter timeline day visibility
+ * Filter timeline day visibility and center active tab in horizontal scroll
  */
 function filterDay(dayNumber) {
   const tabs = document.querySelectorAll(".day-tab");
@@ -354,8 +413,10 @@ function filterDay(dayNumber) {
     const target = tab.getAttribute("data-day-target");
     if (dayNumber === "all" && !target) {
       tab.classList.add("active");
+      tab.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     } else if (target === String(dayNumber)) {
       tab.classList.add("active");
+      tab.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     } else {
       tab.classList.remove("active");
     }
@@ -425,24 +486,19 @@ function updateSummaryMetrics(dest, days, style) {
   const metricBudget = document.getElementById("metricBudget");
   const metaLine = document.getElementById("itineraryMetaLine");
 
-  // Extract day count
   const dayMatch = (days || "").match(/\d+/);
   const numDays = dayMatch ? parseInt(dayMatch[0], 10) : 5;
 
   if (metricDays) metricDays.textContent = numDays;
 
-  // Estimate cities
   const citiesCount = (dest || "").split(/[,&+/]+/).filter(Boolean).length || 2;
   if (metricCities) metricCities.textContent = Math.min(citiesCount, 4);
 
-  // Estimate hotels (approx 1 per 2-3 days)
   const hotelCount = Math.max(1, Math.ceil(numDays / 2.2));
   if (metricHotels) metricHotels.textContent = hotelCount;
 
-  // Estimate experiences (~2.5 per day)
   if (metricExp) metricExp.textContent = Math.round(numDays * 2.5);
 
-  // Estimate budget tier
   let budgetEstimate = `EST. $${numDays * 450}`;
   if ((style || "").toLowerCase().includes("luxury")) {
     budgetEstimate = `EST. $${numDays * 850}`;
@@ -468,10 +524,7 @@ function showResult(answer, threadId, isDraft = false) {
   const resultTitle = document.getElementById("resultTitle");
   const resultSubtitle = document.getElementById("resultSubtitle");
 
-  // Structured timeline cards
   renderTimelineFromMarkdown(latestAnswerMarkdown);
-
-  // Full editorial markdown body
   renderMarkdown(resultBox, latestAnswerMarkdown);
 
   if (threadInfo) {
@@ -499,6 +552,8 @@ function showApproval(data) {
   waitingForApproval = true;
   const section = document.getElementById("approvalSection");
   const approvalRequest = document.getElementById("approvalRequest");
+  const stickyBar = document.getElementById("mobileStickyBar");
+
   if (approvalRequest) {
     approvalRequest.textContent =
       data.approval_request ||
@@ -508,12 +563,17 @@ function showApproval(data) {
     section.classList.remove("hidden");
     section.scrollIntoView({ behavior: "smooth", block: "center" });
   }
+  if (stickyBar) {
+    stickyBar.classList.remove("hidden");
+  }
 }
 
 function hideApproval() {
   waitingForApproval = false;
   const section = document.getElementById("approvalSection");
+  const stickyBar = document.getElementById("mobileStickyBar");
   if (section) section.classList.add("hidden");
+  if (stickyBar) stickyBar.classList.add("hidden");
   const feedbackInput = document.getElementById("approvalFeedback");
   if (feedbackInput) feedbackInput.value = "";
 }
@@ -529,7 +589,6 @@ async function sendMessage() {
     return;
   }
 
-  // Gather structured inputs
   const fieldDest = document.getElementById("fieldDest")?.value.trim() || "";
   const fieldDays = document.getElementById("fieldDays")?.value.trim() || "";
   const fieldStyle = document.getElementById("fieldStyle")?.value.trim() || "";
@@ -542,7 +601,6 @@ async function sendMessage() {
     return;
   }
 
-  // Update Insight Matrix Cells
   const insightPace = document.getElementById("insightPace");
   const insightStyle = document.getElementById("insightStyle");
   const insightInterests = document.getElementById("insightInterests");
@@ -553,11 +611,9 @@ async function sendMessage() {
   if (insightInterests) insightInterests.textContent = fieldInterests || "Culture · Cuisine · Heritage";
   if (insightApproach) insightApproach.textContent = "Curated Specialist Intel";
 
-  // Update photography & metric strip
   updateDestinationHero(fieldDest);
   updateSummaryMetrics(fieldDest, fieldDays, fieldStyle);
 
-  // Construct comprehensive message payload
   let combinedMessage = userInput;
   if (!combinedMessage || combinedMessage.length < 20) {
     combinedMessage = `Plan a ${fieldDays || "5-day"} ${fieldStyle || "Luxury"} journey to ${fieldDest || "Dubai"}. Interests: ${fieldInterests || "Culture and Food"}. Travelers: ${fieldTravelers || "2 adults"}. ${userInput}`;
@@ -620,7 +676,10 @@ async function submitApproval(approved) {
 
   if (!approved && !feedback) {
     showError("Please specify your desired adjustments before requesting a revision.");
-    if (feedbackInput) feedbackInput.focus();
+    if (feedbackInput) {
+      feedbackInput.focus();
+      feedbackInput.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     return;
   }
 
@@ -694,7 +753,7 @@ function downloadPDF() {
   if (downloadBtn) downloadBtn.textContent = "Generating...";
 
   const options = {
-    margin: [0.6, 0.6, 0.6, 0.6],
+    margin: [0.5, 0.5, 0.5, 0.5],
     filename: `TripMate-Itinerary-${currentThreadId || "Client"}.pdf`,
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, backgroundColor: "#F7F5F0" },
@@ -716,15 +775,18 @@ function downloadPDF() {
 }
 
 /**
- * Keyboard shortcuts
+ * Global Keyboard Shortcuts & Event Listeners
  */
 document.addEventListener("keydown", function(event) {
   if (event.ctrlKey && event.key === "Enter") {
     sendMessage();
   }
+  if (event.key === "Escape") {
+    toggleMobileNav(false);
+  }
 });
 
-// Initialize destination image on load
+// Initialize on load
 document.addEventListener("DOMContentLoaded", () => {
   const fieldDest = document.getElementById("fieldDest");
   if (fieldDest && fieldDest.value) {
