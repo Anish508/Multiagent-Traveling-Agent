@@ -6,9 +6,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
-
-import nest_asyncio
-nest_asyncio.apply()
+from starlette.concurrency import run_in_threadpool
 
 from backend import run_travel_agent, resume_travel_agent
 
@@ -62,7 +60,8 @@ async def travel_planner(request_data: TravelRequest):
                 content={"success": False, "error": "Message cannot be empty."},
             )
 
-        result = run_travel_agent(
+        result = await run_in_threadpool(
+            run_travel_agent,
             user_input=user_message,
             thread_id=request_data.thread_id,
         )
@@ -90,7 +89,8 @@ async def approve_travel_plan(request_data: ApprovalRequest):
                 },
             )
 
-        result = resume_travel_agent(
+        result = await run_in_threadpool(
+            resume_travel_agent,
             thread_id=request_data.thread_id,
             approved=request_data.approved,
             feedback=request_data.feedback,
