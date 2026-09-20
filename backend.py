@@ -400,12 +400,28 @@ Keep it practical and realistic.
 # =========================
 # Itinerary Agent
 # =========================
+# =========================
+# Itinerary Agent
+# =========================
 def itinerary_agent(state: TravelState):
+    human_feedback = state.get("human_feedback", "").strip()
+    feedback_instruction = ""
+    if human_feedback:
+        feedback_instruction = f"""
+IMPORTANT TRAVELER REVISION FEEDBACK:
+The traveler has reviewed the previous draft and requested the following modifications:
+"{human_feedback}"
+
+You MUST explicitly adapt the schedule, activities, lodging, or pace to reflect this feedback.
+Prominently incorporate these adjustments into the updated itinerary draft.
+"""
+
     prompt = f"""
 Create a comprehensive, cohesive day-by-day travel itinerary draft based on the collected specialist information.
 
 User Request:
 {state['user_query']}
+{feedback_instruction}
 
 Trip Constraints:
 {state.get('trip_constraints', {})}
@@ -422,19 +438,28 @@ Weather Considerations:
 Budget Guidelines:
 {state.get('budget_results', '')[:1500]}
 
-Format with clear daily schedules, top sights, meal recommendations, and local travel tips.
-Produce a high quality draft ready for traveler review.
+Format with clear daily schedules using standard clean markdown headings:
+### Day 1: [Highlights]
+- 09:00 AM - Activity description
+- 01:00 PM - Afternoon exploration
+- 07:00 PM - Dinner / evening leisure
+
+### Day 2: [Highlights]
+...
+
+Do NOT put emojis anywhere. Produce a high quality draft ready for traveler review.
 """
     response = llm.invoke(
         [
-            SystemMessage(content="You are a senior travel itinerary designer."),
+            SystemMessage(content="You are a senior bespoke travel itinerary designer. Do not use emojis anywhere in your output."),
             HumanMessage(content=prompt),
         ]
     )
 
     approval_request = (
-        "Please review the generated draft itinerary below. You can approve it to finalize "
-        "or request specific revisions (e.g., adjust budget, change hotel preferences, add free time)."
+        f"We have updated your itinerary draft with your requested adjustments: '{human_feedback}'. Review the updated schedule and approve to finalize, or specify further adjustments."
+        if human_feedback
+        else "Our concierge specialists have assembled an initial travel draft. Review the schedule above and choose to confirm as final, or specify custom adjustments."
     )
 
     return {
@@ -470,7 +495,7 @@ def human_approval_agent(state: TravelState):
     return {
         "approved": approved,
         "human_feedback": human_feedback,
-        "messages": [AIMessage(content="Human approval step processed.")],
+        "messages": [AIMessage(content=f"Human feedback processed. Approved: {approved}")],
     }
 
 
@@ -481,15 +506,16 @@ def final_agent(state: TravelState):
     approved = state.get("approved", False)
     human_feedback = state.get("human_feedback", "").strip()
 
-    if approved:
-        review_guidance = "The user approved the draft. Polish and finalize it into an exceptional itinerary."
-    else:
-        review_guidance = f"The user requested revisions with feedback: '{human_feedback}'. Incorporate these adjustments thoroughly."
+    review_guidance = (
+        f"The traveler approved the draft with final adjustment note: '{human_feedback}'."
+        if human_feedback
+        else "The traveler approved the draft. Polish and finalize it into an exceptional master dossier."
+    )
 
     final_prompt = f"""
 Generate the complete final travel master plan for the user.
 
-Traveler Feedback / Review:
+Traveler Review Context:
 {review_guidance}
 
 Original Request:
@@ -507,24 +533,27 @@ Weather:
 Budget:
 {state.get('budget_results', '')[:1000]}
 
-Draft Itinerary:
+Approved Itinerary Draft:
 {state.get('itinerary', '')}
 
 Format the final response cleanly with markdown using these exact sections:
-# ✈️ TripMate AI Master Travel Plan
+# TripMate Master Travel Plan
 
 ### 1. Trip Overview & Summary
 ### 2. Flight & Arrival Information
 ### 3. Recommended Accommodation
 ### 4. Weather & Packing Guidance
 ### 5. Day-by-Day Detailed Itinerary
+(For each day, format as: ### Day 1: Title, ### Day 2: Title, etc.)
 ### 6. Budget Breakdown & Estimates
 ### 7. Essential Travel Tips & Recommendations
+
+Do NOT use any emojis in your output.
 """
 
     response = llm.invoke(
         [
-            SystemMessage(content="You are a professional AI travel booking and concierge assistant."),
+            SystemMessage(content="You are a professional luxury travel booking and concierge director. Do not use emojis anywhere in your output."),
             HumanMessage(content=final_prompt),
         ]
     )
@@ -546,6 +575,7 @@ ROUTE_MAP = {
     "weather_agent": "weather_agent",
     "budget_agent": "budget_agent",
     "itinerary_agent": "itinerary_agent",
+    "final_agent": "final_agent",
 }
 
 
@@ -576,6 +606,13 @@ def route_after_agent(current_agent: str):
     return route
 
 
+def route_after_human_approval(state: TravelState) -> str:
+    approved = state.get("approved", False)
+    if approved:
+        return "final_agent"
+    return "itinerary_agent"
+
+
 # =========================
 # StateGraph Construction
 # =========================
@@ -599,7 +636,7 @@ graph.add_conditional_edges("weather_agent", route_after_agent("weather_agent"),
 graph.add_conditional_edges("budget_agent", route_after_agent("budget_agent"), ROUTE_MAP)
 
 graph.add_edge("itinerary_agent", "human_approval")
-graph.add_edge("human_approval", "final_agent")
+graph.add_conditional_edges("human_approval", route_after_human_approval, ROUTE_MAP)
 graph.add_edge("final_agent", END)
 graph.add_edge("guardrail_blocked", END)
 

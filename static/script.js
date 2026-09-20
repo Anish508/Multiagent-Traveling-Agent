@@ -260,8 +260,8 @@ function renderTimelineFromMarkdown(markdown) {
     return;
   }
 
-  // Regex to split by Day headers e.g. "### Day 1:", "## Day 1 -", "Day 1:"
-  const dayRegex = /(?:^|\n)#{1,4}\s*(Day\s*(\d+)[:\s\-–—]*([^\n]*))/gi;
+  // Enhanced regex to match all day heading variants (e.g. "### **Day 1 – ...**", "### Day 1: ...", "## Day 01 - ...")
+  const dayRegex = /(?:^|\n)(?:#{1,4}\s*)?(?:\*\*)?\s*Day\s*(\d+)[\s\u00A0\u202F]*[:\-–—\.]*[\s\u00A0\u202F]*(.*?)(?:\*\*)?(?:\n|$)/gi;
   const matches = [...markdown.matchAll(dayRegex)];
 
   if (!matches || matches.length === 0) {
@@ -274,8 +274,9 @@ function renderTimelineFromMarkdown(markdown) {
 
   for (let i = 0; i < matches.length; i++) {
     const currentMatch = matches[i];
-    const dayNum = parseInt(currentMatch[2], 10) || (i + 1);
-    const dayTitle = (currentMatch[3] || "").trim() || `Exploration & Highlights`;
+    const dayNum = parseInt(currentMatch[1], 10) || (i + 1);
+    const rawTitle = (currentMatch[2] || "").replace(/[*_#]/g, "").trim();
+    const dayTitle = rawTitle || `Exploration & Highlights`;
     const startIndex = currentMatch.index + currentMatch[0].length;
     const endIndex = (i + 1 < matches.length) ? matches[i + 1].index : markdown.length;
     const dayContent = markdown.slice(startIndex, endIndex).trim();
@@ -288,11 +289,11 @@ function renderTimelineFromMarkdown(markdown) {
       const trimmed = line.trim();
       if (!trimmed) continue;
 
-      if (trimmed.startsWith("### Flight") || trimmed.startsWith("### Hotel") || trimmed.startsWith("### Budget") || trimmed.startsWith("## Final")) {
+      if (trimmed.startsWith("### Flight") || trimmed.startsWith("### Hotel") || trimmed.startsWith("### Budget") || trimmed.startsWith("## Final") || trimmed.startsWith("### 1.") || trimmed.startsWith("### 6.")) {
         break;
       }
 
-      const timeMatch = trimmed.match(/^[-*•]?\s*(?:\*\*)?(\d{1,2}:\d{2}(?:\s*[AP]M)?|Morning|Afternoon|Evening|Night|Midday)(?:\*\*)?[:\s\-–—]*(.*)/i);
+      const timeMatch = trimmed.match(/^[-*•]?\s*(?:\*\*)?(\d{1,2}:\d{2}(?:\s*[AP]M)?|Morning|Afternoon|Evening|Night|Midday|Sunset|Dinner|Lunch)(?:\*\*)?[:\-–—\u00A0\s]*(.*)/i);
       
       if (timeMatch) {
         if (currentActivity) activities.push(currentActivity);
@@ -705,8 +706,14 @@ async function submitApproval(approved) {
     }
 
     showWorkflow(data);
-    hideApproval();
-    showResult(data.answer, data.thread_id, false);
+
+    if (data.requires_approval) {
+      showResult(data.itinerary || data.answer, data.thread_id, true);
+      showApproval(data);
+    } else {
+      hideApproval();
+      showResult(data.answer, data.thread_id, false);
+    }
   } catch (error) {
     showError(error.message);
   } finally {
