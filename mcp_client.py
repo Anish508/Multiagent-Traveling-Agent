@@ -24,7 +24,7 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 AVIATION_STACK_API_KEY = os.getenv("AVIATION_STACK_API_KEY") or os.getenv("AVIATIONSTACK_API_KEY")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
 WEATHER_SERVER_PATH = BASE_DIR / "custom_weather_mcp_server.py"
 UVX_COMMAND = shutil.which("uvx") or "uvx"
@@ -44,11 +44,28 @@ def _subprocess_env(**updates: str | None) -> dict[str, str]:
     return env
 
 
-# Initialize LLM with configured model
-def get_groq_llm(model: str | None = None) -> ChatGroq:
-    model_name = model or GROQ_MODEL
+# Initialize LLM with configured model and automatic fallback chain
+def get_groq_llm(model: str | None = None) -> Any:
     api_key = _require_env("GROQ_API_KEY", GROQ_API_KEY)
-    return ChatGroq(model=model_name, api_key=api_key)
+    primary_model = model or os.getenv("GROQ_MODEL", GROQ_MODEL)
+
+    candidate_models = [
+        "qwen/qwen3.8-27b",
+        "openai/gpt-oss-20b",
+        "openai/gpt-oss-120b",
+    ]
+
+    fallback_models = [m for m in candidate_models if m != primary_model]
+
+    primary_llm = ChatGroq(model=primary_model, api_key=api_key, temperature=0.3)
+    fallback_llms = [
+        ChatGroq(model=m, api_key=api_key, temperature=0.3)
+        for m in fallback_models
+    ]
+
+    if fallback_llms:
+        return primary_llm.with_fallbacks(fallback_llms)
+    return primary_llm
 
 
 llm = get_groq_llm()
