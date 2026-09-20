@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripMate — Bespoke Travel Planning</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="header-brand">
+        <a href="/" class="brand-link">
+          <span class="brand-title">TripMate</span>
+          <span class="brand-tag">Private Travel</span>
+        </a>
+      </div>
+
+      <nav class="header-nav" aria-label="Main Navigation">
+        <a href="#plannerCard" class="nav-link active">Itineraries</a>
+        <a href="#exemplarsSection" class="nav-link">Destinations</a>
+        <a href="#workflowSection" class="nav-link">Concierge</a>
+        <a href="#resultSection" class="nav-link">Dossier</a>
+      </nav>
+
+      <div class="header-actions">
+        <span class="currency-tag">USD ($)</span>
+        <button type="button" class="btn-primary-nav" onclick="focusComposer()">Plan a Journey</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="main-wrapper">
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <span class="hero-category">PLAN YOUR JOURNEY</span>
+      <h1 class="hero-title">Craft your bespoke journey</h1>
+      <p class="hero-subtitle">
+        Build a thoughtful itinerary around your destination, pace, interests and travel style.
+      </p>
+    </section>
+
+    <!-- Trip Brief Composer -->
+    <section id="plannerCard" class="composer-section" aria-labelledby="composerHeading">
+      <div class="composer-header">
+        <h2 id="composerHeading" class="composer-title">Trip Brief Composer</h2>
+        <span class="composer-meta">Specify your parameters or customize the brief</span>
+      </div>
+
+      <!-- Structured Brief Fields -->
+      <div class="brief-grid">
+        <div class="brief-field">
+          <label for="fieldDest" class="field-label">Destination</label>
+          <input type="text" id="fieldDest" class="field-input" placeholder="e.g. Dubai, Abu Dhabi" value="Dubai, Abu Dhabi">
+        </div>
+        <div class="brief-field">
+          <label for="fieldDays" class="field-label">Duration</label>
+          <input type="text" id="fieldDays" class="field-input" placeholder="e.g. 5 days" value="5 days">
+        </div>
+        <div class="brief-field">
+          <label for="fieldStyle" class="field-label">Travel Style</label>
+          <select id="fieldStyle" class="field-select">
+            <option value="Luxury" selected>Luxury</option>
+            <option value="Boutique & Cultural">Boutique & Cultural</option>
+            <option value="Relaxed & Immersive">Relaxed & Immersive</option>
+            <option value="Active Explorer">Active Explorer</option>
+            <option value="Culinary Focus">Culinary Focus</option>
+          </select>
+        </div>
+        <div class="brief-field">
+          <label for="fieldInterests" class="field-label">Interests</label>
+          <input type="text" id="fieldInterests" class="field-input" placeholder="e.g. Architecture, Food, Culture" value="Architecture · Food · Culture">
+        </div>
+        <div class="brief-field">
+          <label for="fieldTravelers" class="field-label">Travelers</label>
+          <input type="text" id="fieldTravelers" class="field-input" placeholder="e.g. 2 adults" value="2 adults">
+        </div>
+      </div>
+
+      <!-- Detailed Brief Textarea -->
+      <div class="textarea-container">
+        <label for="userInput" class="textarea-label">Itinerary Brief & Custom Nuances</label>
+        <textarea
+          id="userInput"
+          class="composer-textarea"
+          rows="4"
+          placeholder="Describe your destination, pace, flight origins, budget preferences, or specific landmarks you wish to experience..."
+        ></textarea>
+
+        <div class="composer-footer">
+          <span class="shortcut-caption">Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to submit</span>
+          <button id="sendBtn" class="btn-submit-brief" onclick="sendMessage()">
+            <span id="btnText">Create Itinerary</span>
+            <span id="btnLoader" class="spinner hidden"></span>
+            <svg class="icon-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Curated Exemplars -->
+      <div id="exemplarsSection" class="exemplars-block">
+        <span class="exemplars-heading">Curated Inspirations</span>
+        <div class="exemplars-row">
+          <button type="button" class="exemplar-pill" onclick="applyExemplar('Dubai & Abu Dhabi', '5 days', 'Luxury', 'Architecture · Desert · Skylines', '2 adults', 'Plan an exceptional 5-day luxury journey in Dubai and Abu Dhabi featuring five-star accommodations, private desert safari, and cultural landmarks.')">
+            <span class="pill-dest">Dubai & Abu Dhabi</span>
+            <span class="pill-sub">5 days · Luxury</span>
+          </button>
+          <button type="button" class="exemplar-pill" onclick="applyExemplar('Tokyo & Kyoto', '7 days', 'Boutique & Cultural', 'Gastronomy · Temples · Rail', '2 adults', 'Plan an exquisite 7-day culinary and cultural exploration of Tokyo and Kyoto with boutique stays, bullet rail, and traditional garden visits.')">
+            <span class="pill-dest">Tokyo & Kyoto</span>
+            <span class="pill-sub">7 days · Culture</span>
+          </button>
+          <button type="button" class="exemplar-pill" onclick="applyExemplar('Swiss Alps Express', '6 days', 'Relaxed & Immersive', 'Panoramic Rail · Mountain Lodges', '2 adults', 'Design a scenic 6-day Swiss rail itinerary through Zurich, Lucerne, and Interlaken with alpine activities and mountain lodges.')">
+            <span class="pill-dest">Swiss Alpine Express</span>
+            <span class="pill-sub">6 days · Scenic Rail</span>
+          </button>
+          <button type="button" class="exemplar-pill" onclick="applyExemplar('Amalfi & Rome', '8 days', 'Boutique & Cultural', 'Art · Coastal Leisure · Wine', '2 adults', 'Curate an authentic 8-day Italian heritage trip across Rome, Florence, and the Amalfi Coast highlighting regional gastronomy and coastal vistas.')">
+            <span class="pill-dest">Amalfi & Rome</span>
+            <span class="pill-sub">8 days · Heritage</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Journey Personalization Insights -->
+    <section id="workflowSection" class="insights-section hidden" aria-labelledby="insightsHeading">
+      <div class="insights-top">
+        <div>
+          <span class="section-kicker">PERSONALIZATION MATRIX</span>
+          <h2 id="insightsHeading" class="insights-title">Your journey, thoughtfully planned</h2>
+          <p class="insights-desc">Our travel specialists have analyzed route dynamics, accommodation tiers, and local seasonal climate.</p>
+        </div>
+        <div id="guardrailBadge" class="policy-indicator">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Policy Verified</span>
+        </div>
+      </div>
+
+      <!-- Humanized Insight Matrix -->
+      <div class="insights-grid">
+        <div class="insight-cell">
+          <span class="cell-label">Your Pace</span>
+          <span class="cell-value" id="insightPace">Relaxed & Balanced</span>
+        </div>
+        <div class="insight-cell">
+          <span class="cell-label">Travel Style</span>
+          <span class="cell-value" id="insightStyle">Boutique Luxury</span>
+        </div>
+        <div class="insight-cell">
+          <span class="cell-label">Interests</span>
+          <span class="cell-value" id="insightInterests">Culture · Cuisine · Design</span>
+        </div>
+        <div class="insight-cell">
+          <span class="cell-label">Approach</span>
+          <span class="cell-value" id="insightApproach">Curated Depth</span>
+        </div>
+      </div>
+
+      <p id="supervisorReasoning" class="insights-narrative"></p>
+      <div id="agentChips" class="specialist-tags"></div>
+    </section>
+
+    <!-- Master Itinerary Presentation -->
+    <section id="resultSection" class="itinerary-section hidden" aria-labelledby="resultTitle">
+
+      <!-- Editorial Header -->
+      <div class="itinerary-header">
+        <div class="itinerary-titles">
+          <span class="itinerary-kicker" id="resultSubtitle">TRAVEL ITINERARY</span>
+          <h2 id="resultTitle" class="itinerary-main-title">Your Bespoke Journey</h2>
+          <div class="itinerary-meta-line" id="itineraryMetaLine">5 days · Curated Exploration</div>
+          <span class="dossier-ref" id="threadInfo">Reference ID: -</span>
+        </div>
+
+        <div class="itinerary-tools">
+          <button type="button" class="btn-tool copy-btn" onclick="copyResult()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy Brief</span>
+          </button>
+          <button type="button" class="btn-tool download-btn" onclick="downloadPDF()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Export PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Summary Metric Strip -->
+      <div class="summary-metric-strip" id="summaryMetrics">
+        <div class="metric-item">
+          <span class="metric-num" id="metricDays">5</span>
+          <span class="metric-lbl">Days</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <span class="metric-num" id="metricCities">2</span>
+          <span class="metric-lbl">Destinations</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <span class="metric-num" id="metricHotels">3</span>
+          <span class="metric-lbl">Accommodations</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <span class="metric-num" id="metricExp">12</span>
+          <span class="metric-lbl">Experiences</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <span class="metric-num" id="metricBudget">EST. $2,800</span>
+          <span class="metric-lbl">Estimated Budget</span>
+        </div>
+      </div>
+
+      <!-- Strategic Editorial Destination Anchor -->
+      <div class="editorial-image-anchor" id="editorialImageContainer">
+        <img id="destinationHeroImg" class="destination-hero-photo" src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80" alt="Destination View" loading="lazy">
+        <div class="image-caption" id="destinationCaption">Curated Destination Overview</div>
+      </div>
+
+      <!-- Visual Travel Route Diagram -->
+      <div class="route-diagram-card" id="routeDiagram">
+        <span class="route-heading">Travel Route & Connections</span>
+        <div class="route-chain" id="routeChain">
+          <div class="route-node">
+            <span class="node-title">Airport Arrival</span>
+            <span class="node-sub">Private transfer</span>
+          </div>
+          <div class="route-arrow">
+            <span class="arrow-line"></span>
+            <span class="arrow-time">35 min</span>
+          </div>
+          <div class="route-node">
+            <span class="node-title">Central Hotel</span>
+            <span class="node-sub">Check-in</span>
+          </div>
+          <div class="route-arrow">
+            <span class="arrow-line"></span>
+            <span class="arrow-time">25 min</span>
+          </div>
+          <div class="route-node">
+            <span class="node-title">Cultural Quarter</span>
+            <span class="node-sub">Sightseeing</span>
+          </div>
+          <div class="route-arrow">
+            <span class="arrow-line"></span>
+            <span class="arrow-time">1h 30m</span>
+          </div>
+          <div class="route-node">
+            <span class="node-title">Regional Departure</span>
+            <span class="node-sub">Return transit</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horizontal Day Navigation Selector -->
+      <nav class="day-navigation" id="dayNav" aria-label="Day by Day Navigation">
+        <div class="day-nav-scroll" id="dayTabsContainer">
+          <button type="button" class="day-tab active" onclick="filterDay('all')">All Days</button>
+          <button type="button" class="day-tab" onclick="filterDay(1)">01 Arrival</button>
+          <button type="button" class="day-tab" onclick="filterDay(2)">02 Heritage</button>
+          <button type="button" class="day-tab" onclick="filterDay(3)">03 Excursion</button>
+          <button type="button" class="day-tab" onclick="filterDay(4)">04 Discovery</button>
+          <button type="button" class="day-tab" onclick="filterDay(5)">05 Departure</button>
+        </div>
+      </nav>
+
+      <!-- Vertical Timeline & Detailed Dossier Container -->
+      <div id="pdfContent" class="dossier-paper">
+        <div class="print-watermark">TripMate Private Travel Client Dossier</div>
+        
+        <!-- Timeline Structured Render -->
+        <div id="timelineContainer" class="itinerary-timeline-wrapper"></div>
+
+        <!-- Markdown Full Content -->
+        <div id="resultBox" class="editorial-body"></div>
+      </div>
+    </section>
+
+    <!-- Traveler Confirmation & Refinement Desk (HITL) -->
+    <section id="approvalSection" class="confirmation-section hidden" aria-labelledby="confirmationHeading">
+      <div class="confirmation-header">
+        <span class="section-kicker kicker-terracotta">TRAVELER REVIEW & REFINEMENT</span>
+        <h2 id="confirmationHeading" class="confirmation-title">Ready to make this journey yours?</h2>
+        <p id="approvalRequest" class="confirmation-desc">
+          Review your itinerary draft, confirm your preferences, or specify custom adjustments before finalizing.
+        </p>
+      </div>
+
+      <!-- Quick Customization Suggestions -->
+      <div class="refinement-chips-wrap">
+        <span class="chips-label">Quick Suggestions:</span>
+        <button type="button" class="chip-action" onclick="addFeedback('Please prioritize boutique heritage properties over large hotels.')">+ Boutique Heritage Stays</button>
+        <button type="button" class="chip-action" onclick="addFeedback('Dedicate one afternoon entirely to unhurried leisure and wellness.')">+ Leisure Afternoon</button>
+        <button type="button" class="chip-action" onclick="addFeedback('Emphasize vegetarian and farm-to-table dining recommendations.')">+ Vegetarian Dining</button>
+        <button type="button" class="chip-action" onclick="addFeedback('Reduce overall estimated expenses while retaining comfortable central lodging.')">+ Optimize Budget</button>
+      </div>
+
+      <!-- Refinement Textarea -->
+      <div class="confirmation-input-box">
+        <label for="approvalFeedback" class="field-label">Custom Adjustment Notes (Optional)</label>
+        <textarea
+          id="approvalFeedback"
+          class="feedback-input"
+          rows="3"
+          placeholder="Add any specific requests (e.g., adjust daily pacing, recommend vegetarian restaurants, swap day activities)..."
+        ></textarea>
+      </div>
+
+      <!-- Confirmation Button Actions -->
+      <div class="confirmation-actions-bar">
+        <button id="approveBtn" type="button" class="btn-confirm" onclick="submitApproval(true)">
+          Confirm Itinerary
+        </button>
+        <button id="reviseBtn" type="button" class="btn-revise" onclick="submitApproval(false)">
+          Request Adjustments
+        </button>
+      </div>
+    </section>
+
+    <!-- Error Notice Banner -->
+    <div id="errorBox" class="notice-banner hidden" role="alert"></div>
+
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-meta">
+        <span class="footer-name">TripMate</span>
+        <span class="footer-tagline">Bespoke Travel Intelligence & Editorial Planning Platform</span>
+      </div>
+      <div class="footer-legal">
+        <span>Curated private itineraries</span> · <span>Production grade</span> · <span>2026</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>

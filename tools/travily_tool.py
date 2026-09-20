@@ -1,1 +1,23 @@
+import os
+from dotenv import load_dotenv
 from tavily import TavilyClient
+
+load_dotenv()
+
+client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
+
+
+def tavilySearch(query: str) -> str:
+    response = client.search(query=query, max_results=5)
+    results = []
+    for i, r in enumerate(response.get("results", []), start=1):
+        title = r.get("title", "Unknown")
+        url = r.get("url", "")
+        snippet = r.get("content", "").strip()
+
+        if len(snippet) > 300:
+            snippet = snippet[:300].rsplit(maxsplit=1)[0] + "..."
+
+        results.append(f"[{i}] {title}\nURL: {url}\nSnippet: {snippet}")
+
+    return "\n\n".join(results) if results else "No results found."
